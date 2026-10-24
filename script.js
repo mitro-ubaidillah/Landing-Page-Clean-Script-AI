@@ -18,7 +18,7 @@ const waitlistForm = document.querySelector('#waitlist-form');
 const emailInput = document.querySelector('#email');
 const formMessage = document.querySelector('.form-message');
 
-waitlistForm?.addEventListener('submit', (event) => {
+waitlistForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const email = emailInput.value.trim();
 
@@ -29,9 +29,26 @@ waitlistForm?.addEventListener('submit', (event) => {
     return;
   }
 
+  const submitBtn = waitlistForm.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
   formMessage.classList.remove('error');
-  formMessage.textContent = 'Terima kasih! Kami akan mengabari Anda saat CleanScript AI siap.';
-  emailInput.value = '';
+  formMessage.textContent = 'Mengirim...';
+
+  try {
+    const res = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'form-name': 'waitlist', email }).toString(),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    formMessage.textContent = 'Terima kasih! Kami akan mengabari Anda saat CleanScript AI siap.';
+    emailInput.value = '';
+  } catch (err) {
+    formMessage.classList.add('error');
+    formMessage.textContent = 'Gagal mengirim. Coba lagi, atau hubungi kami langsung.';
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 });
 
 const revealItems = document.querySelectorAll('.reveal');
