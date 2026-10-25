@@ -18,6 +18,10 @@ const waitlistForm = document.querySelector('#waitlist-form');
 const emailInput = document.querySelector('#email');
 const formMessage = document.querySelector('.form-message');
 
+// URL deployment Google Apps Script web app (lihat waitlist-appscript/Code.gs).
+// Ganti dengan URL /exec milikmu setelah deploy web app.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/PASTE_DEPLOYMENT_ID/exec';
+
 waitlistForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const email = emailInput.value.trim();
@@ -35,13 +39,16 @@ waitlistForm?.addEventListener('submit', async (event) => {
   formMessage.textContent = 'Mengirim...';
 
   try {
-    const res = await fetch('/', {
+    // Apps Script web app: fire-and-forget dengan mode no-cors (bodynya berupa
+    // JSON string — dikirim sebagai text/plain agar tidak memicu preflight CORS).
+    // Response tidak bisa dibaca, karenanya UI bersifat optimistik.
+    await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ 'form-name': 'waitlist', email }).toString(),
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ email }),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    formMessage.textContent = 'Terima kasih! Kami akan mengabari Anda saat CleanScript AI siap.';
+    formMessage.textContent = 'Terima kasih! Email kamu tercatat — kami akan mengabari saat CleanScript AI siap.';
     emailInput.value = '';
   } catch (err) {
     formMessage.classList.add('error');
